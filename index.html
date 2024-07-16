@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLOR WORD TASK</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #content {
+            text-align: center;
+            font-size: 24px;
+        }
+
+        button {
+            font-size: 18px;
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+
+        .color-square {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+        }
+
+        #condition {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .color-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 20px;
+        }
+
+        .color-row-5x2 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .condition-text {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 30px;
+            line-height: 1.5;
+            font-weight: bold;
+        }
+
+        .condition-text .top-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 30px;
+            margin-bottom: 100px;
+        }
+
+        .condition-text .bottom-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            row-gap: 60px;
+            column-gap: 40px;
+        }
+
+        .condition-text .word {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .condition-text .color-row {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .condition-text p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .condition-rule {
+            text-align: left;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            align-self: flex-start;
+        }
+
+        .boxed {
+            border: 2px solid black;
+            padding: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+        <h1 id="title">COLOR WORD TASK</h1>
+        <div id="condition"></div>
+        <button id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        let seed = 123456789;
+
+        const pages = [
+            { type: 'title', content: 'COLOR WORD TASK' },
+            { type: 'blank' },
+            { type: 'condition', number: 1 },
+            { type: 'blank' },
+            { type: 'condition', number: 2 },
+            { type: 'blank' },
+            { type: 'condition', number: 3 },
+            { type: 'blank' },
+            { type: 'condition', number: 4 },
+            { type: 'blank' }
+        ];
+
+        function nextPage() {
+            currentPage++;
+            if (currentPage >= pages.length) {
+                currentPage = 0;
+            }
+            updatePage();
+        }
+
+        function updatePage() {
+            const page = pages[currentPage];
+            const titleElement = document.getElementById('title');
+            const conditionElement = document.getElementById('condition');
+
+            titleElement.style.display = page.type === 'title' ? 'block' : 'none';
+            conditionElement.style.display = page.type === 'condition' ? 'flex' : 'none';
+
+            if (page.type === 'title') {
+                titleElement.textContent = page.content;
+            } else if (page.type === 'condition') {
+                conditionElement.innerHTML = generateCondition(page.number);
+            } else {
+                // Blank page
+                titleElement.style.display = 'none';
+                conditionElement.style.display = 'none';
+            }
+        }
+
+        function generateCondition(conditionNumber) {
+            const colors = ['red', 'blue', 'green'];
+            const words = ['red', 'blue', 'green'];
+            let content = '';
+
+            switch (conditionNumber) {
+                case 1:
+                    content += '<div class="color-row-5x2">';
+                    for (let i = 0; i < 10; i++) {
+                        const color = getRandomElement(colors);
+                        content += `<div class="color-square" style="background-color: ${color};"></div>`;
+                    }
+                    content += '</div>';
+                    content += '<div class="color-grid">';
+                    for (let i = 0; i < 50; i++) {
+                        const color = getRandomElement(colors);
+                        content += `<div class="color-square" style="background-color: ${color};"></div>`;
+                    }
+                    content += '</div>';
+                    break;
+                case 2:
+                case 3:
+                case 4:
+                    const numTopWords = 10;
+                    const numBottomWords = 50;
+                    content += '<div class="condition-text">';
+
+                    if (conditionNumber === 3) {
+                        content += '<p class="condition-rule"><span class="boxed">Rule:</span><br>Name the ink color.</p>';
+                    } else if (conditionNumber === 4) {
+                        content += '<p class="condition-rule"><span class="boxed">Rules:</span><br>1. <span style="color: red;">blue</span> - Name the ink color.<br>2. <span class="boxed" style="color: green;">red</span> - Read the word.</p>';
+                    }
+
+                    content += '<div class="top-grid">';
+                    for (let i = 0; i < numTopWords; i++) {
+                        const word = getRandomElement(words);
+                        const color = conditionNumber >= 3 ? getRandomElement(colors) : 'black';
+                        const boxed = conditionNumber === 4 && getRandomBoolean() ? 'boxed' : '';
+                        content += `<div class="word ${boxed}" style="color: ${color};">${word}</div>`;
+                    }
+                    content += '</div>';
+
+                    content += '<div class="bottom-grid">';
+                    for (let i = 0; i < numBottomWords; i++) {
+                        const word = getRandomElement(words);
+                        const color = conditionNumber >= 3 ? getRandomElement(colors) : 'black';
+                        const boxed = conditionNumber === 4 && getRandomBoolean() ? 'boxed' : '';
+                        content += `<div class="word ${boxed}" style="color: ${color};">${word}</div>`;
+                    }
+                    content += '</div>';
+
+                    content += '</div>';
+                    break;
+            }
+            return content;
+        }
+
+        function getRandomElement(array) {
+            seed = (seed * 9301 + 49297) % 233280;
+            const randomIndex = Math.floor((seed / 233280) * array.length);
+            return array[randomIndex];
+        }
+
+        function getRandomBoolean() {
+            return getRandomElement([true, false]);
+        }
+
+        updatePage();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+{
+  "nix.enableLanguageServer": true,
+  "nix.serverPath": "nil",
+  "nixEnvSelector.nixFile": "${workspaceFolder}/shell.nix",
+  "nix.serverSettings": {
+    "nil": {
+      "formatting": {
+        "command": [
+          "alejandra"
+        ]
+      }
+    }
+  },
+  "editor.formatOnSave": true,
+  "terminal.integrated.profiles.linux": {
+    "zsh": {
+      "path": "nix",
+      "args": [
+        "develop",
+      ]
+    }
+  }
+}
