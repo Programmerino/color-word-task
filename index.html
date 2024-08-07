@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
     <title>COLOR WORD TASK</title>
     <style>
         body {
@@ -125,7 +126,18 @@
 
     <script>
         let currentPage = 0;
-        let seed = 123456789;
+        let rng;
+
+        // Function to get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // Set the seed from URL parameter or use default
+        rng = new Math.seedrandom(parseInt(getUrlParameter('seed')) || 123456789);
 
         const pages = [
             { type: 'title', content: 'COLOR WORD TASK' },
@@ -167,71 +179,222 @@
             }
         }
 
-        function generateCondition(conditionNumber) {
-            const colors = ['red', 'blue', 'green'];
-            const words = ['red', 'blue', 'green'];
-            let content = '';
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
 
+        function shuffleNoRepeatsBy(array, scoreFn) {
+            console.log("Starting");
+            const arrayCopy = [...array]; // Create a copy of the original array
+
+            shuffleArray(arrayCopy);
+
+            let totalScore = Infinity;
+            while (true) {
+                let currentScore = 0;
+                for (let i = 0; i < arrayCopy.length - 1; i++) {
+                    let pairScore = scoreFn(arrayCopy[i], arrayCopy[i + 1]);
+                    // console.log(pairScore);
+                    if (pairScore !== 0) {
+                        let bestCandidate = i + 1;
+                        let bestScore = pairScore;
+                        for (let j = 0; j < arrayCopy.length; j++) {
+                            if (j !== i && j !== i + 1) {
+                                let candidateScore =
+                                    scoreFn(arrayCopy[i], arrayCopy[j])
+                                    + (j === 0 ? 0 : scoreFn(arrayCopy[j - 1], arrayCopy[i + 1]))
+                                    + (j === arrayCopy.length - 1 ? 0 : scoreFn(arrayCopy[i + 1], arrayCopy[j + 1]))
+                                if (candidateScore < bestScore) {
+                                    bestCandidate = j;
+                                    bestScore = candidateScore;
+                                    if (bestScore === 0) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        pairScore = bestScore;
+                        [arrayCopy[i + 1], arrayCopy[bestCandidate]] = [arrayCopy[bestCandidate], arrayCopy[i + 1]];
+                    }
+                    currentScore += pairScore;
+                }
+                if (currentScore < totalScore) {
+                    console.log(currentScore);
+                    totalScore = currentScore;
+                } else {
+                    break;
+                }
+            }
+
+            return arrayCopy;
+        }
+
+        // Redefine shuffleNoRepeats in terms of shuffleNoRepeatsBy
+        function shuffleNoRepeats(array) {
+            return shuffleNoRepeatsBy(array, (x, y) => (x === y ? 1 : 0));
+        }
+
+        const colors = ['red', 'blue', 'green'];
+        const words = ['red', 'blue', 'green'];
+        let content = '';
+
+        const unshuffledColors = Array(20).fill('red').concat(Array(20).fill('blue')).concat(Array(20).fill('green'));
+        let colorWordPairsUnshuffled = [];
+        while (colorWordPairsUnshuffled.length < 60) {
+            for (const color of colors) {
+                {
+                    for (const word of words) {
+                        if (colorWordPairsUnshuffled.length < 60) {
+                            colorWordPairsUnshuffled.push({ color, word });
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        console.log(colorWordPairsUnshuffled);
+
+        const numTopWords = 10;
+        const numBottomWords = 50;
+
+        // Shuffle the array
+        let c1colorsArray = shuffleNoRepeats(unshuffledColors);
+        let c2colorsArray = shuffleNoRepeats(unshuffledColors);
+        let colorWordPairs = shuffleNoRepeatsBy(colorWordPairsUnshuffled, ((x, y) => {
+            let { color: color1, word: text1 } = x;
+            let { color: color2, word: text2 } = y;
+            let val =
+                (color1 === color2 ? 1 : 0)
+                + (text1 === text2 ? 1 : 0);
+            return val;
+        }));
+        const repetitionIndex = Math.floor(rng() * (colorWordPairs.length - 2)) + 1;
+        var { color } = colorWordPairs[repetitionIndex];
+        var { word } = colorWordPairs[repetitionIndex - 1];
+        colorWordPairs.splice(repetitionIndex, 1, { color, word });
+
+        const c4Unshuffled =
+            Array(5).fill({ color: "red", text: "blue", boxedClass: "unboxed" })
+                .concat(Array(9).fill({ color: "blue", text: "red", boxedClass: "unboxed" }))
+                .concat(Array(8).fill({ color: "red", text: "green", boxedClass: "boxed" }))
+                .concat(Array(5).fill({ color: "green", text: "blue", boxedClass: "unboxed" }))
+                .concat(Array(3).fill({ color: "blue", text: "green", boxedClass: "unboxed" }))
+                .concat(Array(5).fill({ color: "green", text: "red", boxedClass: "boxed" }))
+                .concat(Array(4).fill({ color: "green", text: "red", boxedClass: "unboxed" }))
+                .concat(Array(4).fill({ color: "red", text: "blue", boxedClass: "boxed" }))
+                .concat(Array(5).fill({ color: "red", text: "green", boxedClass: "unboxed" }))
+                .concat(Array(4).fill({ color: "green", text: "blue", boxedClass: "boxed" }))
+                .concat(Array(5).fill({ color: "blue", text: "red", boxedClass: "boxed" }))
+                .concat(Array(3).fill({ color: "blue", text: "green", boxedClass: "boxed" }));
+
+        function c4Scorer(x, y) {
+            let { color: color1, text: text1, boxedClass: boxedClass1 } = x;
+            let { color: color2, text: text2, boxedClass: boxedClass2 } = y;
+            return (text1 === text2 ? 1 : 0);
+        }
+
+        let c4Shuffled = shuffleNoRepeatsBy(c4Unshuffled, c4Scorer);
+
+        let dontTouch = [];
+        function duplicate(text, n, inkSame) {
+            let lastIndex = 0;
+            for (let i = 0; i < n; i++) {
+                const index = c4Shuffled.findIndex((item, idx, _) => item.text === text && idx > lastIndex && (idx - 1 < 0 || c4Shuffled[idx - 1].text !== text) && (idx + 2 > c4Shuffled.length - 1 || c4Shuffled[idx + 2].text !== text) && !dontTouch.includes(idx + 1));
+                const current = c4Shuffled[index];
+                const nextCandidate = c4Shuffled.findIndex((item, idx, _) =>
+                    item.text === text // Must have the same text for a duplicate
+                    && item.boxedClass !== current.boxedClass // Can't repeat boxed status
+                    && (inkSame === (item.color === current.color)) // Can't repeat ink color or need to repeat ink color
+                    && (idx === 0 || c4Scorer(c4Shuffled[idx - 1], c4Shuffled[index + 1]) === 0) // Don't increase score (right side)
+                    && (idx === c4Shuffled.length - 1 || c4Scorer(c4Shuffled[index + 1], c4Shuffled[idx + 1]) === 0) // Don't increase score (left side)
+                    && !dontTouch.includes(idx) // Don't swap banned index
+                );
+                if (index !== -1 && nextCandidate !== -1 && index !== c4Shuffled.length - 1) {
+                    [c4Shuffled[index + 1], c4Shuffled[nextCandidate]] = [c4Shuffled[nextCandidate], c4Shuffled[index + 1]];
+                    console.log(c4Shuffled[index + 1], c4Shuffled[nextCandidate])
+                    lastIndex = index;
+                    dontTouch.push(index);
+                    dontTouch.push(index + 1);
+                } else {
+                    console.log("Couldn't find enough candidates");
+                    break;
+                }
+            }
+        }
+        duplicate("red", 4, false);
+        duplicate("blue", 1, false);
+        duplicate("green", 1, true);
+        duplicate("green", 1, false);
+
+        function generateCondition(conditionNumber) {
+            content = '';
+            content += '<div class="condition-text">';
             switch (conditionNumber) {
                 case 1:
                     content += '<div class="color-row-5x2">';
-                    for (let i = 0; i < 10; i++) {
-                        const color = getRandomElement(colors);
+                    for (let i = 0; i < numTopWords; i++) {
+                        const color = c1colorsArray[i];
                         content += `<div class="color-square" style="background-color: ${color};"></div>`;
                     }
                     content += '</div>';
+
                     content += '<div class="color-grid">';
-                    for (let i = 0; i < 50; i++) {
-                        const color = getRandomElement(colors);
+                    for (let i = numTopWords; i < numBottomWords + numTopWords; i++) {
+                        const color = c1colorsArray[i];
                         content += `<div class="color-square" style="background-color: ${color};"></div>`;
                     }
                     content += '</div>';
                     break;
                 case 2:
-                case 3:
-                case 4:
-                    const numTopWords = 10;
-                    const numBottomWords = 50;
-                    content += '<div class="condition-text">';
-
-                    if (conditionNumber === 3) {
-                        content += '<p class="condition-rule"><span class="boxed">Rule:</span><br>Name the ink color.</p>';
-                    } else if (conditionNumber === 4) {
-                        content += '<p class="condition-rule"><span class="boxed">Rules:</span><br>1. <span style="color: red;">blue</span> - Name the ink color.<br>2. <span class="boxed" style="color: green;">red</span> - Read the word.</p>';
-                    }
-
                     content += '<div class="top-grid">';
                     for (let i = 0; i < numTopWords; i++) {
-                        const word = getRandomElement(words);
-                        const color = conditionNumber >= 3 ? getRandomElement(colors) : 'black';
-                        const boxed = conditionNumber === 4 && getRandomBoolean() ? 'boxed' : '';
-                        content += `<div class="word ${boxed}" style="color: ${color};">${word}</div>`;
+                        content += `<div class="word">${c2colorsArray[i]}</div>`;
+                    }
+                    content += '</div>';
+                    content += '<div class="bottom-grid">';
+                    for (let i = numTopWords; i < numTopWords + numBottomWords; i++) {
+                        content += `<div class="word">${c2colorsArray[i]}</div>`;
+                    }
+                    content += '</div>';
+                    break;
+                case 3:
+                    content += '<p class="condition-rule"><span class="boxed">Rule:</span><br>Name the ink color.</p>';
+                    content += '<div class="top-grid">';
+                    for (let i = 0; i < numTopWords; i++) {
+                        var { color, word } = colorWordPairs[i];
+                        content += `<div class="word" style="color: ${color};">${word}</div>`;
+                    }
+                    content += '</div>';
+                    content += '<div class="bottom-grid">';
+                    for (let i = numTopWords; i < numTopWords + numBottomWords; i++) {
+                        var { color, word } = colorWordPairs[i];
+                        content += `<div class="word" style="color: ${color};">${word}</div>`;
+                    }
+                    content += '</div>';
+                    break;
+                case 4:
+                    content += '<p class="condition-rule"><span class="boxed">Rules:</span><br>1. <span style="color: red;">blue</span> - Name the ink color.<br>2. <span class="boxed" style="color: green;">red</span> - Read the word.</p>';
+                    content += '<div class="top-grid">';
+                    for (let i = 0; i < numTopWords; i++) {
+                        var { text, color, boxedClass } = c4Shuffled[i];
+                        content += `<div class="word ${boxedClass}" style="color: ${color};">${text}</div>`;
                     }
                     content += '</div>';
 
                     content += '<div class="bottom-grid">';
-                    for (let i = 0; i < numBottomWords; i++) {
-                        const word = getRandomElement(words);
-                        const color = conditionNumber >= 3 ? getRandomElement(colors) : 'black';
-                        const boxed = conditionNumber === 4 && getRandomBoolean() ? 'boxed' : '';
-                        content += `<div class="word ${boxed}" style="color: ${color};">${word}</div>`;
+                    for (let i = numTopWords; i < numTopWords + numBottomWords; i++) {
+                        var { text, color, boxedClass } = c4Shuffled[i];
+                        content += `<div class="word ${boxedClass}" style="color: ${color};">${text}</div>`;
                     }
-                    content += '</div>';
-
                     content += '</div>';
                     break;
             }
+            content += '</div>';
             return content;
-        }
-
-        function getRandomElement(array) {
-            seed = (seed * 9301 + 49297) % 233280;
-            const randomIndex = Math.floor((seed / 233280) * array.length);
-            return array[randomIndex];
-        }
-
-        function getRandomBoolean() {
-            return getRandomElement([true, false]);
         }
 
         updatePage();
