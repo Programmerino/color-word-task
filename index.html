@@ -248,7 +248,9 @@
                 {
                     for (const word of words) {
                         if (colorWordPairsUnshuffled.length < 60) {
-                            colorWordPairsUnshuffled.push({ color, word });
+                            if (color != word) {
+                                colorWordPairsUnshuffled.push({ color, word });
+                            }
                         } else {
                             break;
                         }
@@ -272,10 +274,20 @@
                 + (text1 === text2 ? 1 : 0);
             return val;
         }));
-        const repetitionIndex = Math.floor(rng() * (colorWordPairs.length - 2)) + 1;
-        var { color } = colorWordPairs[repetitionIndex];
-        var { word } = colorWordPairs[repetitionIndex - 1];
-        colorWordPairs.splice(repetitionIndex, 1, { color, word });
+        while (true) {
+            const repetitionIndex = Math.floor(rng() * (colorWordPairs.length - 2)) + 1;
+            let { color } = colorWordPairs[repetitionIndex];
+            let { word } = colorWordPairs[repetitionIndex - 1];
+            let causesRepetition = false;
+            if (repetitionIndex + 1 <= (colorWordPairs.length - 1)) {
+                let next = colorWordPairs[repetitionIndex + 1];
+                causesRepetition = next.word === word || next.color === color;
+            }
+            if (color !== word && !causesRepetition) {
+                colorWordPairs.splice(repetitionIndex, 1, { color, word });
+                break;
+            }
+        }
 
         const c4Unshuffled =
             Array(5).fill({ color: "red", text: "blue", boxedClass: "unboxed" })
